@@ -35,7 +35,7 @@ const addNewURL = (longURL) => {
 
 // Root directory
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect("/urls");
 });
 
 // User login
@@ -46,7 +46,7 @@ app.post("/login", (req, res) => {
 
 //User logout
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("username")
   res.redirect("/urls");
 })
 
@@ -71,12 +71,7 @@ app.get("/urls/new", (req, res) => {
 // Add new URL to urlDatabase
 app.post("/urls", (req, res) => {
   let newID = addNewURL(req.body.longURL);
-  const templateVars = { 
-    id: newID,
-    longURL: urlDatabase[newID],
-    username: req.cookies["username"]
-   };
-  res.render("urls_show", templateVars);
+  res.redirect("/urls");
 });
 
 // Display long and short URLs
@@ -107,16 +102,6 @@ app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 })
-
-/*
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-*/
 
 // Start Server
 app.listen(PORT, () => {
