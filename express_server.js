@@ -37,6 +37,12 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+// User login
+app.post("/login", (req, res) => {
+  res.cookie("username", req.body.username);
+  res.redirect("/urls");
+});
+
 // Diplay urlDatabse
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
@@ -53,6 +59,7 @@ app.post("/urls", (req, res) => {
   let newID = addNewURL(req.body.longURL);
   const templateVars = { id: newID, longURL: urlDatabase[newID] };
   res.render("urls_show", templateVars);
+  // res.redirect("/urls");
 });
 
 // Display long and short URLs
