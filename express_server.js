@@ -38,6 +38,12 @@ app.get("/", (req, res) => {
   res.redirect("/urls");
 });
 
+// User registration
+app.get("/register", (req, res) => {
+  const templateVars = { username: req.cookies["username"]};
+  res.render("registration", templateVars);
+});
+
 // User login
 app.post("/login", (req, res) => {
   res.cookie("username", req.body.username);
