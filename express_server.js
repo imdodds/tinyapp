@@ -89,12 +89,18 @@ app.post("/register", (req, res) => {
 });
 
 // User login
+app.get("/login", (req, res) => {
+  const templateVars = { user: req.cookies["user_id"]};
+  res.render("login", templateVars);
+})
+
+// Login user
 app.post("/login", (req, res) => {
   res.cookie("users", req.body.email);
   res.redirect("/urls");
 });
 
-//User logout
+// Logout user
 app.post("/logout", (req, res) => {
   res.clearCookie("users")
   res.redirect("/urls");
@@ -109,7 +115,7 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-// User submits new URL
+// Submit new URL
 app.get("/urls/new", (req, res) => {
   const templateVars = { 
     urls: urlDatabase,
