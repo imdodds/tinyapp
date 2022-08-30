@@ -46,6 +46,16 @@ const addNewURL = (longURL) => {
   return newID;
 };
 
+const getUserByEmail = (email) => {
+  for (user in users) {
+    if (email === users[user].email) {
+      return users[user];
+    }
+  }
+  return null;
+};
+
+
 // Root directory
 app.get("/", (req, res) => {
   res.redirect("/urls");
@@ -57,13 +67,25 @@ app.get("/register", (req, res) => {
   res.render("registration", templateVars);
 });
 
-// Registration handler
+// Registration Handler
 app.post("/register", (req, res) => {
-  const userID = generateRandomString(8);
-  users[userID] = req.body;
-  users[userID].id = userID;
-  res.cookie("user_id", users[userID]);
-  res.redirect("/urls");
+
+  // if email/password are empty strings return 400 status code
+  if (req.body.email === "" || req.body.password === "") {
+    res.status(400).send("Invalid username or password");
+
+  // if email already exists return 400 status code
+  } else if (getUserByEmail(req.body.email)) {
+    res.status(400).send("Username already exists");
+
+  // register new user
+  } else {
+    const userID = generateRandomString(8);
+    users[userID] = req.body;
+    users[userID].id = userID;
+    res.cookie("user_id", users[userID]);
+    res.redirect("/urls");
+  }
 });
 
 // User login
