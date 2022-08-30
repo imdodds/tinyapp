@@ -12,6 +12,19 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {
+  userRandomID: {
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+    id: "userRandomID"
+  },
+  user2RandomID: {
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+    id: "user2RandomID"
+  }
+};
+
 const generateRandomString = (length) => {
 
   let result = "";
@@ -40,19 +53,28 @@ app.get("/", (req, res) => {
 
 // User registration
 app.get("/register", (req, res) => {
-  const templateVars = { username: req.cookies["username"]};
+  const templateVars = { user: req.cookies["user_id"]};
   res.render("registration", templateVars);
+});
+
+// Registration handler
+app.post("/register", (req, res) => {
+  const userID = generateRandomString(8);
+  users[userID] = req.body;
+  users[userID].id = userID;
+  res.cookie("user_id", users[userID]);
+  res.redirect("/urls");
 });
 
 // User login
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
+  res.cookie("users", req.body.email);
   res.redirect("/urls");
 });
 
 //User logout
 app.post("/logout", (req, res) => {
-  res.clearCookie("username")
+  res.clearCookie("users")
   res.redirect("/urls");
 })
 
@@ -60,7 +82,7 @@ app.post("/logout", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = { 
     urls: urlDatabase,
-    username: req.cookies["username"]
+    user: req.cookies["user_id"]
    };
   res.render("urls_index", templateVars);
 });
@@ -69,7 +91,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const templateVars = { 
     urls: urlDatabase,
-    username: req.cookies["username"]
+    user: req.cookies["user_id"]
    };
   res.render("urls_new", templateVars);
 });
@@ -85,7 +107,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = { 
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
-    username: req.cookies["username"]
+    user: req.cookies["user_id"]
    };
   res.render("urls_show", templateVars);
 });
