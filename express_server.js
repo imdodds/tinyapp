@@ -70,8 +70,12 @@ app.get("/", (req, res) => {
 // User registration
 app.get("/register", (req, res) => {
   const templateVars = { user: req.cookies["user_id"]};
-  res.render("registration", templateVars);
-});
+  // if user is logged in redirect to /urls
+  if (req.cookies["user_id"]) {
+    res.redirect("/urls");
+  } else {
+    res.render("registration", templateVars);
+  }});
 
 // Registration Handler
 app.post("/register", (req, res) => {
@@ -97,11 +101,17 @@ app.post("/register", (req, res) => {
 // User login
 app.get("/login", (req, res) => {
   const templateVars = { user: req.cookies["user_id"]};
-  res.render("login", templateVars);
+  // if user is logged in redirect to /urls
+  if (req.cookies["user_id"]) {
+    res.redirect("/urls");
+  } else {
+    res.render("login", templateVars);
+  }
 });
 
 // Login Handler
 app.post("/login", (req, res) => {
+
   // look up email in the user object
   if (getUserByEmail(req.body.email)) {
     const user = getUserByEmail(req.body.email);
@@ -141,13 +151,22 @@ app.get("/urls/new", (req, res) => {
     urls: urlDatabase,
     user: req.cookies["user_id"]
    };
-  res.render("urls_new", templateVars);
+   // if user is not logged in redirect to login
+   if (req.cookies["user_id"]) {
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 // Add new URL to urlDatabase
 app.post("/urls", (req, res) => {
-  let newID = addNewURL(req.body.longURL);
-  res.redirect("/urls");
+  if (req.cookies["user_id"]) {
+    let newID = addNewURL(req.body.longURL);
+    res.redirect("/urls");
+  } else {
+    res.send("You must be logged in to add a new URL");
+  }
 });
 
 // Display long and short URLs
@@ -162,8 +181,12 @@ app.get("/urls/:id", (req, res) => {
 
 // Redirect to Long URL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  if (urlDatabase[req.params.id]) {
+    const longURL = urlDatabase[req.params.id];
+    res.redirect(longURL);
+  } else {
+    res.send("URL not found");
+  }
 });
 
 //Edit a URL
