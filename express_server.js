@@ -1,5 +1,6 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
+const { send } = require("express/lib/response");
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -22,6 +23,11 @@ const users = {
     email: "user2@example.com",
     password: "dishwasher-funk",
     id: "user2RandomID"
+  },
+  test: {
+    email: "ianmitchelldodds@gmail.com",
+    password: "123",
+    id: "test"
   }
 };
 
@@ -47,7 +53,7 @@ const addNewURL = (longURL) => {
 };
 
 const getUserByEmail = (email) => {
-  for (user in users) {
+  for (let user in users) {
     if (email === users[user].email) {
       return users[user];
     }
@@ -72,11 +78,11 @@ app.post("/register", (req, res) => {
 
   // if email/password are empty strings return 400 status code
   if (req.body.email === "" || req.body.password === "") {
-    res.status(400).send("Invalid username or password");
+    res.status(400).send("Invalid email or password");
 
   // if email already exists return 400 status code
   } else if (getUserByEmail(req.body.email)) {
-    res.status(400).send("Username already exists");
+    res.status(400).send("Email already exists");
 
   // register new user
   } else {
@@ -92,17 +98,31 @@ app.post("/register", (req, res) => {
 app.get("/login", (req, res) => {
   const templateVars = { user: req.cookies["user_id"]};
   res.render("login", templateVars);
-})
+});
 
-// Login user
+// Login Handler
 app.post("/login", (req, res) => {
-  res.cookie("users", req.body.email);
-  res.redirect("/urls");
+  // look up email in the user object
+  if (getUserByEmail(req.body.email)) {
+    const user = getUserByEmail(req.body.email);
+    // compare passwords
+    if (req.body.password === user.password) {
+      // set user_id cookie and login
+      res.cookie("user_id", user);
+      res.redirect("/urls");
+    } else {
+      // if passwords do not match return 403 status code
+      res.status(403).send("Invalid password");
+    }
+  } else {
+    // if email not found return 403 status code
+    res.status(403).send("Email not found");
+  }
 });
 
 // Logout user
 app.post("/logout", (req, res) => {
-  res.clearCookie("users")
+  res.clearCookie("user_id");
   res.redirect("/urls");
 })
 
@@ -142,8 +162,8 @@ app.get("/urls/:id", (req, res) => {
 
 // Redirect to Long URL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id]
-  res.redirect(longURL)
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
 });
 
 //Edit a URL
@@ -157,7 +177,7 @@ app.post("/urls/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
-})
+});
 
 // Start Server
 app.listen(PORT, () => {
