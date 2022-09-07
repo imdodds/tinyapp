@@ -252,44 +252,46 @@ app.get("/u/:id", (req, res) => {
 // Edit a URL
 app.post("/urls/:id", (req, res) => {
 
-  // return error message if id does not exist
-  if (!urlDatabase[req.params.id]) {
+  // check if id exists
+  if (urlDatabase[req.params.id]) {
+    // check if user is logged in
+    if (req.session.user_id) {
+      // check if user owns URL
+      if (urlsForUser(req.session.user_id)) {
+        const longURL = req.body.longURL;
+        urlDatabase[req.params.id].longURL = longURL;
+        res.redirect("/urls");
+      } else {
+        res.send("You do not have permission to edit this URL");
+      }
+    } else {
+      res.send("You must be logged in to edit this URL");
+    }
+  } else {
     res.send("The page you are looking for could not be found")
   }
-    // return error message if user does not own url
-    else if (!urlsForUser(req.cookies.user_id)) {
-      res.send("You do not have permission to edit this URL");
-    }
-      // return error message if user is not logged in
-      else if (!req.session.user_id) {
-        res.send("You must be logged in to edit this URL");
-      }
-        else {
-          const longURL = req.body.longURL;
-          urlDatabase[req.params.id].longURL = longURL;
-          res.redirect("/urls");
-        }
 });
 
 // Delete a URL
 app.post("/urls/:id/delete", (req, res) => {
 
-  // return error message if id does not exist
-  if (!urlDatabase[req.params.id]) {
+  // check if id exists
+  if (urlDatabase[req.params.id]) {
+    // check if user is logged in
+    if (req.session.user_id) {
+      // check if user owns URL
+      if (urlsForUser(req.session.user_id)) {
+        delete urlDatabase[req.params.id];
+        res.redirect("/urls");
+      } else {
+        res.send("You do not have permission to delete this URL");
+      }
+    } else {
+      res.send("You must be logged in to delete this URL");
+    }
+  } else {
     res.send("The page you are looking for could not be found")
   }
-    // return error message if user does not own url
-    else if (!urlsForUser(req.session.user_id)) {
-      res.send("You do not have permission to delete this URL");
-    }
-      // return error message if user is not logged in
-      else if (!req.session.user_id) {
-        res.send("You must be logged in to delete this URL");
-      }
-        else {
-          delete urlDatabase[req.params.id];
-          res.redirect("/urls");
-        }
 });
 
 // Start Server
