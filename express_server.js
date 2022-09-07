@@ -95,7 +95,11 @@ const urlsForUser = (id) => {
 
 // Root directory
 app.get("/", (req, res) => {
-  res.redirect("/urls");
+  if (req.cookies.user_id) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 // User registration
