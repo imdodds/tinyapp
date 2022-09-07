@@ -6,7 +6,10 @@ const req = require("express/lib/request");
 const bcrypt = require("bcryptjs");
 const saltRounds = 10;
 const app = express();
+
 const PORT = 8080; // default port 8080
+
+const _ = require("./helpers");
 
 // View Engine
 app.set("view engine", "ejs");
@@ -78,15 +81,6 @@ const addNewURL = (longURL) => {
   return urlDatabase[newID];
 };
 
-const getUserByEmail = (email) => {
-  for (let user in users) {
-    if (email === users[user].email) {
-      return users[user];
-    }
-  }
-  return null;
-};
-
 const urlsForUser = (id) => {
 
   let userURLs = {};
@@ -98,7 +92,6 @@ const urlsForUser = (id) => {
   }
   return userURLs;
 };
-
 
 // Root directory
 app.get("/", (req, res) => {
@@ -123,7 +116,7 @@ app.post("/register", (req, res) => {
     res.status(400).send("Invalid email or password");
 
   // if email already exists return 400 status code
-  } else if (getUserByEmail(req.body.email)) {
+  } else if (_.getUserByEmail(req.body.email, users)) {
     res.status(400).send("Email already exists");
 
   // register new user
@@ -154,8 +147,8 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
 
   // look up email in the user object
-  if (getUserByEmail(req.body.email)) {
-    const user = getUserByEmail(req.body.email);
+  if (_.getUserByEmail(req.body.email, users)) {
+    const user = _.getUserByEmail(req.body.email, users);
     // compare passwords
     if (bcrypt.compareSync(req.body.password, user.password)) {
       // set user_id cookie and login
