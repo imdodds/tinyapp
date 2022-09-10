@@ -1,5 +1,4 @@
 const express = require("express");
-const cookieParser = require("cookie-parser");
 const cookieSession = require("cookie-session");
 const { send } = require("express/lib/response");
 const req = require("express/lib/request");
@@ -16,7 +15,6 @@ app.set("view engine", "ejs");
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 app.use(cookieSession({
   name: 'user_id',
   keys: ["superSecretKey"],
@@ -27,14 +25,17 @@ app.use(cookieSession({
 
 const urlDatabase = {
   "b2xVn2": {
+    id: "b2xVn2",
     longURL: "http://www.lighthouselabs.ca",
     userID: "test"
   },
   "9sm5xK" : {
+    id: "9sm5xK",
     longURL: "http://www.google.com",
     userID: "test"
   },
   "np123" : {
+    id: "np123",
     longURL: "http://www.neopets.com",
     userID: "12345678"
   }
@@ -76,6 +77,7 @@ const generateRandomString = (length) => {
 const addNewURL = (longURL) => {
   const newID = generateRandomString(8);
   urlDatabase[newID] = {
+    "id" : newID,
     "longURL" : longURL
   }
   return urlDatabase[newID];
@@ -95,7 +97,7 @@ const urlsForUser = (id) => {
 
 // Root directory
 app.get("/", (req, res) => {
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     res.redirect("/urls");
   } else {
     res.redirect("/login");
@@ -106,7 +108,7 @@ app.get("/", (req, res) => {
 app.get("/register", (req, res) => {
   const templateVars = { user: req.session.user_id };
   // if user is logged in redirect to /urls
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     res.redirect("/urls");
   } else {
     res.render("registration", templateVars);
@@ -170,8 +172,8 @@ app.post("/login", (req, res) => {
 
 // Logout user
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
-  res.redirect("/urls");
+  req.session = null;
+  res.redirect("/login");
 })
 
 // Diplay urlDatabse
@@ -203,11 +205,11 @@ app.get("/urls/new", (req, res) => {
 });
 
 // Add new URL to urlDatabase
-app.post("/urls", (req, res) => {
+app.post("/urls", (req, res) => { 
   if (req.session.user_id) {
     let newURL = addNewURL(req.body.longURL);
     newURL.userID = req.session.user_id.id;
-    res.redirect("/urls");
+    res.redirect(`/urls/${newURL.id}`);
   } else {
     res.send("You must be logged in to add a new URL");
   }
@@ -215,27 +217,33 @@ app.post("/urls", (req, res) => {
 
 // Display long and short URLs
 app.get("/urls/:id", (req, res) => {
-  // if user is logged in check URL against user's URLs
-  if (req.session.user_id) {
-    const userURLs = urlsForUser(req.session.user_id.id);
-    const shortURL = req.params.id;
-    if (userURLs) {
-      for (let url in userURLs) {
-        if (url === shortURL) {
-          const templateVars = { 
-            id: shortURL,
-            longURL: urlDatabase[shortURL].longURL,
-            user: req.session.user_id
-           };
-           res.render("urls_show", templateVars);
-        } 
-      }
+  // check if id exists
+  if (urlDatabase[req.params.id]) {
+    // if user is logged in check URL against user's URLs
+    if (req.session.user_id) {
+      const userURLs = urlsForUser(req.session.user_id.id);
+      const shortURL = req.params.id;
+      if (Object.keys(userURLs).length > 0) {
+        for (let url in userURLs) {
+          if (url === shortURL) {
+            const templateVars = { 
+              id: shortURL,
+              longURL: urlDatabase[shortURL].longURL,
+              user: req.session.user_id
+            };
+            res.render("urls_show", templateVars);
+          } 
+        }
+      } else {
+          res.send("You do not have permission to view this page");
+        }
+    // if user is not logged in display message
     } else {
-      res.send("You do not have permission to view this page");
+      res.send("You must be logged in to view this page");
     }
-  // if user is not logged in display message
+  // if id does not exist display message  
   } else {
-    res.send("You must be logged in to view this page");
+    res.send("The page you are looking for could not be found");
   }
 });
 
@@ -268,7 +276,7 @@ app.post("/urls/:id", (req, res) => {
       res.send("You must be logged in to edit this URL");
     }
   } else {
-    res.send("The page you are looking for could not be found")
+    res.send("The page you are looking for could not be found");
   }
 });
 
